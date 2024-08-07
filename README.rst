@@ -4,13 +4,13 @@
    :target: https://github.com/lsst-sitcom/sitcomtn-136/actions/
 
 ########################################
-Calibration of the Rubin absolute timing
+Calibration of the Rubin Absolute Timing
 ########################################
 
 SITCOMTN-136
 ============
 
-geosync satellite
+This technote describes the tools and analysis to calibrate the absolute timing of the Rubin camera systems and shutters by measuring the position of geo-sychronous satellites.
 
 Links
 =====
