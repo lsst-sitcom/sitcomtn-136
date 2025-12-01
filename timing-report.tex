@@ -299,7 +299,9 @@ Then, a horizontal line was cut through the center of the resulting tracks to un
           \label{fig:smeared-profiles}
 \end{figure}
 
-For this reason, the track start positions are identified by estimating the 50\% intensity relative to the average track intensity using a profile histogram as demonstrated in Fig.~\ref{fig:hand-scan} above.  At the time of hand scanning, in addition to a RA and DEC an estimated error size was also recorded.
+For this reason, the track start positions are identified by estimating the 50\% intensity relative to the average track intensity using a profile histogram as demonstrated in Fig.~\ref{fig:hand-scan} above.  At the time of hand scanning, in addition to a RA and DEC, an estimated error size was also recorded.
+
+The exposures taken on November 29th had a seeing of approximately 1.3" to 1.4". The exposures from December 12th had worse seeing of near 2.9".  While estimating the 50\% intensity level position was relatively straight-forward with the November exposures, using the exposures with more than 2.8" of seeing was much more difficult and added much less power to the timing fit.  This is reflected in the error estimation for those start points which are 2-4 times larger than that for the November exposures (see Tab.~\ref{tab:merged-table}).
 
 \subsection{Coordinate Transformations with Astropy}
 
@@ -338,19 +340,29 @@ With track positions from the exposures, and a predicted position based on the F
 \toprule
  & obsid & waas\_RA & waas\_DEC & RA\_Start & DEC\_Start & Error\_Start & Shutter\_offset & Blade \\
 \midrule
-0 & CC\_O\_20241129\_000237\_R22\_S21 & 35.17 & 4.63 & 35.17 & 4.63 & 0.52 & 22.00 & B \\
-1 & CC\_O\_20241129\_000238\_R22\_S22 & 35.23 & 4.63 & 35.23 & 4.63 & 0.35 & 33.00 & A \\
-2 & CC\_O\_20241129\_000239\_R22\_S22 & 35.30 & 4.63 & 35.30 & 4.63 & 0.58 & 21.00 & B \\
-3 & CC\_O\_20241129\_000240\_R22\_S22 & 35.37 & 4.63 & 35.37 & 4.63 & 0.51 & 34.00 & A \\
-4 & CC\_O\_20241129\_000246\_R22\_S11 & 35.97 & 4.63 & 35.97 & 4.63 & 0.36 & 30.00 & A \\
-5 & CC\_O\_20241129\_000247\_R22\_S21 & 36.04 & 4.63 & 36.04 & 4.63 & 0.51 & 26.00 & B \\
-6 & CC\_O\_20241129\_000249\_R22\_S22 & 36.17 & 4.63 & 36.17 & 4.63 & 0.59 & 19.00 & B \\
-7 & CC\_O\_20241129\_000250\_R22\_S22 & 36.24 & 4.63 & 36.24 & 4.63 & 0.68 & 37.00 & A \\
-8 & CC\_O\_20241207\_000549\_R22\_S21 & 76.05 & 4.70 & 76.05 & 4.70 & 1.08 & 35.00 & A \\
-9 & CC\_O\_20241207\_000550\_R22\_S22 & 76.10 & 4.70 & 76.10 & 4.70 & 2.56 & 28.00 & B \\
+%0 & CC\_O\_20241129\_000237\_R22\_S21 & 35.17 & 4.63 & 35.17 & 4.63 & 0.52 & 22.00 & B \\
+%1 & CC\_O\_20241129\_000238\_R22\_S22 & 35.23 & 4.63 & 35.23 & 4.63 & 0.35 & 33.00 & A \\
+%2 & CC\_O\_20241129\_000239\_R22\_S22 & 35.30 & 4.63 & 35.30 & 4.63 & 0.58 & 21.00 & B \\
+%3 & CC\_O\_20241129\_000240\_R22\_S22 & 35.37 & 4.63 & 35.37 & 4.63 & 0.51 & 34.00 & A \\
+%4 & CC\_O\_20241129\_000246\_R22\_S11 & 35.97 & 4.63 & 35.97 & 4.63 & 0.36 & 30.00 & A \\
+%5 & CC\_O\_20241129\_000247\_R22\_S21 & 36.04 & 4.63 & 36.04 & 4.63 & 0.51 & 26.00 & B \\
+%6 & CC\_O\_20241129\_000249\_R22\_S22 & 36.17 & 4.63 & 36.17 & 4.63 & 0.59 & 19.00 & B \\
+%7 & CC\_O\_20241129\_000250\_R22\_S22 & 36.24 & 4.63 & 36.24 & 4.63 & 0.68 & 37.00 & A \\
+%8 & CC\_O\_20241207\_000549\_R22\_S21 & 76.05 & 4.70 & 76.05 & 4.70 & 1.08 & 35.00 & A \\
+%9 & CC\_O\_20241207\_000550\_R22\_S22 & 76.10 & 4.70 & 76.10 & 4.70 & 2.56 & 28.00 & B \\
+0 & CC\_O\_20241129\_000237\_R22\_S21 & 35.166226 & 4.626722 & 35.166472 & 4.626702 & 0.522000 & 22.00 & B \\
+1 & CC\_O\_20241129\_000238\_R22\_S22 & 35.232858 & 4.626813 & 35.232824 & 4.626801 & 0.347000 & 33.00 & A \\
+2 & CC\_O\_20241129\_000239\_R22\_S22 & 35.299403 & 4.626903 & 35.299805 & 4.626900 & 0.581000 & 21.00 & B \\
+3 & CC\_O\_20241129\_000240\_R22\_S22 & 35.366032 & 4.626994 & 35.365886 & 4.627031 & 0.506000 & 34.00 & A \\
+4 & CC\_O\_20241129\_000246\_R22\_S11 & 35.971700 & 4.627828 & 35.971827 & 4.627898 & 0.364000 & 30.00 & A \\
+5 & CC\_O\_20241129\_000247\_R22\_S21 & 36.038266 & 4.627921 & 36.038466 & 4.627908 & 0.514000 & 26.00 & B \\
+6 & CC\_O\_20241129\_000249\_R22\_S22 & 36.171460 & 4.628106 & 36.171805 & 4.628094 & 0.592000 & 19.00 & B \\
+7 & CC\_O\_20241129\_000250\_R22\_S22 & 36.238110 & 4.628199 & 36.238099 & 4.628133 & 0.679000 & 37.00 & A \\
+8 & CC\_O\_20241207\_000549\_R22\_S21 & 76.045748 & 4.696712 & 76.045773 & 4.696779 & 1.081000 & 35.00 & A \\
+9 & CC\_O\_20241207\_000550\_R22\_S22 & 76.102218 & 4.696846 & 76.102652 & 4.696767 & 2.560000 & 28.00 & B \\
 \bottomrule
 \end{tabular}
-\caption{Selected columns from the merged dataframe. The dataframe contains times (not shown for space) as well as the scanned and predicted RAs and DECs along with shutter information.}
+\caption{Selected columns from the merged dataframe. The dataframe contains times (not shown for space) as well as the scanned and predicted RAs and DECs in decimal degrees along with shutter information.}
 \label{tab:merged-table}
 \end{sidewaystable}
 
