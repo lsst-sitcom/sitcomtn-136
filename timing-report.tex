@@ -1,0 +1,517 @@
+%\documentclass[modern]{aastex631}
+
+%\usepackage{pythonhighlight}
+%\usepackage{rotating}
+%\usepackage{booktabs}
+
+%\graphicspath{{./figures/}}
+
+%\begin{document}
+%\title{Absolute Observatory Timing Calibration using Geo-Synchronous Satellites}
+%\date{\today}
+
+%% \author[0000-0003-2035-2380]{C.W. Walter}
+%% \affiliation{Department of Physics, Duke University, Durham NC 27708, USA}
+
+%% \begin{abstract}
+
+%%     An absolute timing calibration for the Rubin Observatory which includes the clock system and the motion of the camera shutter is necessary to accurately report the positions of astronomical objects such as asteroids and the timestamps of transient astronomical phenomenon. The observatory employs two different clock systems, an NTP based system that should be good to approximately 1~ms, and a PTP-based system with potential sub-microsecond accuracy.  The Commissioning Camera used during the first period of Rubin Observatory commissioning relied on the NTP clock, while the LSST Camera relies on the PTP-based system.  In this tech-note, an analysis is described utilizing a GPS system geo-synchronous satellite with precisely known spatial positions to calibrate the Observatory's NTP based clock.  After corrections for the camera shutter motion is considered, a $-161.98 \pm 11.06$ milliseconds timing offset is found.  A detailed description of the analysis is presented along with a proposal for a followup satellite-based timing test using the LSST Camera.
+
+%% \end{abstract}
+
+\section{Introduction}
+
+During the Rubin Observatory commissioning period, a dedicated test was undertaken to test the absolute calibration of the complete observatory timing system.  Doing an absolute timing calibration is difficult because, with no calibrated local atomic clock, the observatory system must rely on synchronization with remote timing standards, correcting for any delays or latency.  As the Earth rotates, the sky itself can in fact be used as an external clock.  However, controlling the pointing of the large Simonyi telescope is a complicated mechanical process, and which involves some uncertainty.  Additionally, as light moves through the Earth's atmosphere and then into the optics of the telescope it is distorted, resulting in measured positions which are shifted from that of the true image.  These differences in absolute sky pointing are overcome by fitting a pointing and distortion model against a highly accurate reference model~\citep{2010A&A...524A..42P} of the positions of stars in the sky.  Any small differences of absolute timing will be incorporated into this model, meaning that fixed objects in the sky cannot be used to test the accuracy of the system to millisecond time scales.  Adding to the complexity, the camera shutter moves across the focal plane during the exposure.  This movement takes hundreds of milliseconds resulting in one side of the focal plane being exposed to light earlier than the other.
+
+When an exposure is taken with the camera, the time of integration is recorded in the FITS~\citep{2010A&A...524A..42P} headers in the meta-data of the exposure.  This timestamp relies on the absolute timing of the system. However, as noted above, it does not map directly onto the time that the light from astronomical objects reaches the focal plane.  There are additional delays which must be considered.  Sometime after the integration start command is given, a command is given to open the shutter. Then, the shutter moves across the focal plane, exposing the CCDs as it moves.  In order to determine the absolute accuracy of the time associated with the position of each object measured on the focal plane, all of the above elements, from the integration time stamp, to the motion of the camera shutter must be understood.
+
+In this analysis, we follow the procedure that was used in the ATLAS Survey~\citep{2018PASP..130f4505T}.  Namely, we utilize a geo-synchronous satellite whose location as function of time is extremely well known.  We target observations of the satellite and predict its location based on the integration start time stamp and shutter motion delays.  Then a timing fit, which varies a timing offset, is used to determine the accuracy the observatory timing standard at the camera.
+
+This test was performed using the Rubin Commissioning Camera (ComCam) utilizing a set of targeted exposures taken in November and December of 2024.
+
+\subsection{Rubin Timing System Requirements}
+
+Requirements on the timing accuracy of the Observatory system are specified in section 35.1.1.5 of of the Observatory System Specifications LSE-30~\citep{LSE-30}. The requirements are specifically described in OSS-REQ-0087 and OSS-REQ-0335.
+%Also look in \citep{LPM-17}?
+In OSS-REQ-0087 the timing precision on the supplied system time is specified with an accuracy of 10~milliseconds and a precision of $\pm$ 1 ms. There are two items to note:
+
+\begin{itemize}
+    \item This is not actually a requirement on absolute timing accuracy. Rather it is a requirement on {\it synchronization} with the observatory master clock. No requirement is specified on the master clock accuracy itself.
+    \item The requirement is a statement about the input clock accuracy for each system.  For a detailed understanding of what is required of a particular system (e.g. the ComCam) the OSS states: "The relationship between the timestamp and the actual physical event, expressed as latency/jitter, depends on both the computer and the hardware (mechanical, electrical, etc.). It is the responsibility of individual hardware design teams to determine the relevance of latency/jitter."
+\end{itemize}
+
+Also specified in in OSS-REQ-0335 is the requirement on shutter timing errors. However, this requirement is not specified as a timing constrain.  Rather, it is expressed as a constraint on the resulting photometric magnitude error in milli-magnitude. This requirement cannot be directly tested by the timing calibration described here.
+
+\subsection{The Rubin Timing System}
+\label{sec:timing-system}
+
+Given the ambiguity on the observatory requirements, we instead target the expected accuracy of the systems we are using, along with the requirements of (especially) the solar-system collaboration.   Our timing accuracy should firstly be no worse than the 10 millisecond observatory synchronization accuracy. Then, based on expected performance of the NTP and PTP systems we should be able to achieve close to 1~ms accuracy.  A one to ten millisecond accuracy would also meet the needs of the solar system collaboration for asteroid orbit determination\footnote{Mario Juri\'c, Private Communication}.
+
+The ComCam utilizes the NTP synchronization system to create its time stamps. Several independent computers housed inside of the ComCam are synched to the same clock signal which is distributed throughout the Observatory over the local fiber network. The LSST Camera (LSSTCam) utilizes the more accurate PTP system.  The analysis described here utilizes the ComCam but, in Sec.~\ref{sec:next-steps} a followup proposed test with the LSSTCam is presented.
+
+Information about the NTP system can be found on Wikipedia which also references with relevant information.  It summarizes the expected accuracy as "{\it NTP can usually maintain time to within tens of milliseconds over the public Internet, and can achieve better than one millisecond accuracy in local area networks under ideal conditions. Asymmetric routes and network congestion can cause errors of 100 ms or more.}"
+
+From a reference to that sentence above~\footnote{\url{https://www.eecis.udel.edu/~mills/exec.html}} a more detailed description of expected performance can be found:
+
+\begin{verbatim}
+The NTP accuracy expectations depend on the environment and application
+requirements. In practice, the single factor most affecting accuracy at
+the longer update intervals used on network paths is ambient
+temperature variations. Under typical room temperature conditions, the
+clock oscillator frequency can vary up to a few parts-per-million (PPM).
+This results in accuracies of a few milliseconds at update intervals
+of fifteen minutes. However, accuracy can be much improved at update
+intervals of one minute, as used with primary reference clocks.
+
+At the lower update intervals, the primary factor affecting accuracy
+is jitter due to network and operating system latencies. With a GPS
+receiver and pulse-per-second (PPS) signal, together with operating
+system support in typical Unix kernels, the accuracy is in the order of
+a few microseconds. This of course is a property of the hardware and
+operating system, not the NTP protocol.
+
+As a rule of thumb, the accuracy over the Internet is proportional
+to the propagation delay. For a lightly loaded 100-Mb/s Ethernet, the
+accuracy is in the order of 100 ms. For an intercontinental Internet
+path, the accuracy can be up to several tens of milliseconds.
+
+On network paths with large asymmetric propagation delays, such as
+when one direction is via satellite and the other via landline, the
+errors can reach 100 ms or more. There is no way these errors can be
+avoided, unless there is prior knowledge of the path characteristics.
+\end{verbatim}
+
+Based on all of these factors we expect and target a one to 10 millisecond accuracy for our NTP-base timing system.
+
+\subsection{The WAAS GPS system}
+\label{sec:WAAS}
+
+In order to predict and describe the orbit of satellites there are several systems in use.  One of the most common are Two-Line Element Sets (TLEs)~\footnote{\url{https://en.wikipedia.org/wiki/Two-line_element_set}}. The TLE is a data-format that encodes a set of satellite orbital parameters at a given time (epoch). With the proper orbit propagation code, the TLE can be used to predict the orbit for nearby times.  TLEs are publicly available for known commercial satellites and are updated with a typically daily cadence.  In section~\ref{sec:observations} the use of TLEs to target the satellite observations is described. 
+
+However, the orbital positions from public TLEs only describe the accuracy of the orbit positions to the kilometer scale, which is not accurate enough to achieve one millisecond accuracies as required for our case.  So instead we relay on observing one of the WAAS satellites for which we can download highly accurate location information after the fact.
+
+The WAAS satellites~\footnote{\url{https://en.wikipedia.org/wiki/Wide_Area_Augmentation_System}} are part of the GPS system, are geo-stationary, and are used to broadcast measured GPS corrections down to aircraft for precision landing etc. These positions are measured to {\it much} higher accuracy (probably in the cm to 10s of cm range~\footnote{I cannot actually find a real reference for how or how well they are measured.  I assume it is done with radar.}) than public orbital TLE files which are only good to the kilometer level. There are currently three WAAS satellites in operation and there is one WAAS satellite at 117W visible to us in Rubin (EUTELSAT 117W B) with NORAD ID 41589.
+
+EUTELSAT 117W B~\footnote{\url{https://www.eutelsat.com/satellite-network/GEO-fleet/eutelsat-117-west\#tab-horizontal-1249=tab-1978}}, is one of a pair of commercial satellites (EUTELSAT 117A and 117B).  Only 117B functions as part of the WAAS system.   They are both in geosynchronous orbit.  The following screenshot from Stellarium~\citep{2025zndo..15715458C} demonstrates their relative locations.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=4.5in]{stellarium-screenshot.png}
+    \caption{The location of EUTELSAT 117B relative to its pair satellite. EUTELSAT 117B properties can also be seen.}
+    \label{fig:stellarium-screenshot}
+\end{figure}
+
+For the three WAAS satellites, the FAA/NTSB publishes the high precision position location of the satellites in a non-public binary format on their website~\footnote{\url{https://www.nstb.tc.faa.gov/nstbarchive.html}} with a several day delay. Dave Monet provided private code that decodes the files~\footnote{Private communication.}, resulting a timestamped file with x,y,z positions which are reported every three-minutes. With the list of positions and times for any exposure FITS header time, one can interpolate to the needed time and then convert the spatial coordinates of the satellite into an expected RA and DEC.  By comparing with the actual observed location of the satellite, a timing fit which varies a time offset can determine any observatory time delays.
+
+Since the WAAS satellites are geosynchronous, tracking the sky for several seconds as the Earth rotates results in a static star field and a track associated with the satellite as its location above the Earth remains fixed.  For this analysis, the measured start of the track is used to compare with when the integration of charge is predicted to begin.
+
+Doing the calculation requires:
+
+\begin{itemize}
+    \item Interpolating the 3 min WAAS FAA data to shorter time steps to be used at millisecond precision.
+    \item Predicting the position observed at Rubin at that time including all coordinate transformations and light travel time considerations.
+    \item Measuring the location of the satellite track, while taking into account the smearing due to the atmospheric PSF from comparison.
+\end{itemize}
+
+In this framework, to measure to millisecond precision means measuring satellite track location to pixel scale resolution.  The relevant numbers are summarized below:
+
+\begin{itemize}
+    \item Milliseconds per pixel 	   = 13.33
+    \item Pixel per Millisecond        = 0.075
+    \item Eutelsat size in pixels 	   = 2.88 [According to Stellarium. Note: that radar cross section is reported as being much smaller] 
+    \item Eutelsat size in meters 	   = 117.74
+\end{itemize}
+
+\subsection{The ComCam}
+
+The commissioning Camera~\citep{2022SPIE12184E..0JS, 2024rubn.inst....2S}  was used in the first months of the Rubin Commissioning campaign. Described more fully in the above references, the camera consists of a single raft made of nine ITL 4kx4k CCD sensors located at the center position of the camera focal plane. Designed to be a fully functional surrogate for the camera with the same mass profile and electronics, the system was used for end-to-end tests and the performance should be very similar to the LSSTCam.
+
+As noted in Sec.~\ref{sec:timing-system} above, the ComCam utilizes the NTP system.  If the observatory master clock is synchronized to its upstream tiers at the one to ten millisecond level, then the local synchronization should deliver similar performance.
+
+\subsection{The ComCam Shutter System}
+\label{sec:shutter-system}
+The shutter system is a 236mm Bonn-Shutter~\footnote{I have a PDF of the manual but currently no URL}. There are two blades with a programmable gap between them. The time of the start of CCD integration (in TAI units) is reflected in the FITS headers in the DATE-BEG header. Fig.~\ref{fig:shutter-timing} below, made by Tony Johnson, illustrates the timing of the following steps.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=4.5in]{comcam-shutter-timing.png}
+    \caption{Shutter timing diagram from Tony Johnson}
+    \label{fig:shutter-timing}
+\end{figure}
+
+By examining the logs of the computer in the comcam that manages the shutter (comcam-hcu03 ), it is found that (for the exposures considered in this analysis) the shutter open signal is triggered about 29 milliseconds after the integration stamp on average (with a 6 milliseconds rms). Then there is a 396 millisecond period where the blade that is selected moves linearly out of the way of the focal plane, exposing the CCDs as it goes.  The shutter remains open for the exposure time, and then the second blade begins to cover the focal plane again, taking another 396 milliseconds until the shutter is fully closed.
+
+\section{Observing EUTELSAT 117W}
+\label{sec:observations}
+
+EUTELSAT 117W B was observed on two nights near the end of 2024, using  test BLOCK-299 on November 24th (see Rubin-TV sequences 236-255), and BLOCK-T332 on December 5th (Sequences 549 and 550). There were a set of 12 useful exposures recovered each with clearly distinguishable tracks that resulted from tracking the sky for 10~second.  As Rubin tracks the sky, and the satellites stay synchronous over the earth they show up as a streak in the image. All twelve of the exposures had a streak start point initiated inside one of the ComCam CCDs.
+
+The position of geosynchronous satellites does vary somewhat in the sky as they move in the orbits and they undertake active "station keeping" to maintain their desired position. So, in order to successfully observe the satellite in the single ComCam raft, a prediction of sky location at the time of observation is required.
+
+\subsection{Predicted satellite location via TLEs}
+
+Especially during the commissioning period when the exact time that observations would be carried out was hard or impossible to predict, a target position that would be applicable over some hours or days was desirable.  In order to predict the satellite location, an orbit prediction based on publicly available TLEs (as described in Sec.~\ref{sec:WAAS} above) was used.  The Skyfield~\citep{2019ascl.soft07024R} package was used with TLEs downloaded from CelesTrak web service~\footnote{\url{https://celestrak.org/NORAD/elements/gp.php?CATNR=41589&FORMAT=TLE}} to predict the satellite location during the period of observing.  For a period of 24~hours, Fig.~\ref{fig:117B-position} shows the expected location in Alt/Az as seen by Rubin. 
+ 
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics{117B-Position.png}
+    \caption{The calculated expected position of EUTELSAT 117B for the next 24 hours. The red dot shows the position at the start of the calculation time.}
+    \label{fig:117B-position}
+\end{figure}
+
+From this calculation an mean location and range  of Alt/Azs were determined. For  Fig.~\ref{fig:117B-position} the calculated Alt and Az values were: 
+
+\begin{verbatim}
+EUTELSAT_117W_B 	 AZ Min:295.720 Max: 295.727 	 Mean:295.722
+EUTELSAT_117W_B 	 ALT Min:29.100 Max: 29.111 	 Mean:29.105
+\end{verbatim}
+
+The mean location in Alt/AZ was used to point the telescope during observations.
+
+\subsection{Observation blocks}
+
+The main observation block used for driving this test was BLOCK-T299 (on December 12th Block T332 which also performed non-sidereal tracking was use). Block-299 is shown below.  After pointing at the expected mean position, a set of five 5 second and then 10 second exposures was taken as the telescope tracked the sky. The test was run twice (back-to-back) on November 29th.  On December 12th two more 10 seconds exposures were taken in the context of T332.  
+
+% cSpell:disable
+\begin{verbatim}
+{
+    "name": "BLOCK-T299",
+    "program": "BLOCK-T299",
+    "constraints": [],
+    "scripts": [
+        {
+            "name": "maintel/track_target.py",
+            "standard": true,
+            "parameters": {
+                "track_azel": {
+                    "az": -64.287,
+                    "el": 29.095
+                },
+                "target_name": "EUTELSAT_117W_B",
+                "rot_value": 0.0,
+                "rot_type": "PhysicalSky"
+            }
+        },
+        {
+            "name": "maintel/take_image_comcam.py",
+            "standard": true,
+            "parameters": {
+                "image_type": "ENGTEST",
+                "program": "$program",
+                "nimages": 5,
+                "exp_times": 10,
+                "reason": "TimingCalibration",
+                "filter": "r_03"
+            }
+        },
+        {
+            "name": "maintel/take_image_comcam.py",
+            "standard": true,
+            "parameters": {
+                "image_type": "ENGTEST",
+                "program": "$program",
+                "nimages": 5,
+                "exp_times": 5,
+                "reason": "TimingCalibration",
+                "filter": "r_03"
+            }
+        }
+    ]
+}
+\end{verbatim}
+% cSpell:enable
+
+The data was taken near satellite opposition close to 03:00 local time in order to maximize the brightness. In practice, it was found that the satellite was very bright and the one attempt in December to observe the satellite with non-sidereal tracking resulted in a saturated exposure.  Therefore, it is likely the case that this test could be repeated over most of the night.
+
+It should also be noted that these exposures were of type 'ENGTEST'. This has implications on whether and how long the collections that hold them are kept, and what processing is run on them.
+
+\subsection{Recorded Observations}
+
+As described above, 22 exposures were recorded.  There were five five-second and five ten-second exposures, that were taken twice on the 29th and two more ten-second exposures on December 12th.  It was determined after scanning that the 10 seconds exposures were most useful for this test, leaving 12 exposures.  Two of these exposures had track starts that were either in chip-gaps or off of the edge of the raft, resulting in 10 exposures used for analysis.
+
+\subsubsection{Position Interpolation}
+
+As described in Sec.~\ref{sec:WAAS}, the FAA/NTSB publishes precision location information of the WAAS satellites with a few days delay.  After downloading and translating the binary files as described in that section, a prediction is made of the expected satellite location for comparison with what is inferred from the exposures.
+
+However, the recorded set of positions for the satellite, is only reported every three minutes.  Luckily, the satellites are moving quite slowly and smoothly on the sky relative to this time scale.  So, in order to predict the location to the needed precision the positions are interpolated to 10ms and those points are used for the fit.  The interpolation is done by using a cubic spline over the data in a plus or minus 15 minute window to the needed time.  Using an even more precise interpolation does not result in better fit precision, only an increase in computation time, implying that that the fit precision is limited by other factors such as statistics.
+
+\section{Image Processing}
+
+After the exposures were taken, nightly validation was run, resulting in a FITS file that had ISR applied along with a fitted a WCS. The header of the FITS file also contained the DATE-BEG header reflecting the start of of CCD integration time recorded in TAI.
+
+In order to compare with the predicted sky location and fit for any time delays, the positions in RA, and DEC of the start of the satellite trails were extracted from the images using DS9~\footnote{\url{https://sites.google.com/cfa.harvard.edu/saoimageds9/home}}. Details of this procedure are outlined below.
+
+\subsection{WCS and cross-checks}
+
+Extracting a sky position for the EUTELSAT 117WB from DS9 relies on having an accurate WCS. Unlike when the WCS is solved for co-adds, the WCS calculated via nightly processing during the commissioning period was based on simple scaling and rotation of the DM Camera model of the ComCam. 
+
+For this reason a series of checks were performed to make sure that the resulting WCSs were reasonable and would not themselves introduce large biases into the analysis.  Fig.~\ref{fig:ds9-wcs} shows an example of the GAIA DR2 sources overlaid with the exposure near a satellite track demonstrating that the current WCS is performing adequately. 
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=4.5in]{ds9-wcs}
+    \caption{A crosscheck of GAIA DR2 data against our image. DR2 sources are shown as green circles and overlap with sources seen in the exposure.}
+    \label{fig:ds9-wcs}
+\end{figure}
+
+\subsection{Scanning for Track End points}
+
+All of the selected exposures were scanned in RubinTV, and after determining the relevant sensor for analysis the start point for each satellite track was recorded.  An example trail from EUTELSAT 117W B in the selected exposures is shown in Fig.~\ref{fig:hand-scan} below.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=4.5in]{hand-scan.png}
+    \caption{A track}
+    \label{fig:hand-scan}
+\end{figure}
+
+As noted above, to achieve 1 to 10~ms scale resolutions requires measuring the track ends to pixel level precision.  With an atmospheric PSF larger than one pixel this becomes a challenging problem.  Two approaches were attempted. In the first a deconvolution procedure was attempted. When it was found that these results were not stable, a simple scan of the position where the brightness was 50\% of full track was employed.  These two approaches are described below. 
+
+\subsection{Lucy-Richardson Deconvolution}
+
+Attempts to deconvolve the track with first a Wiener filter and later the  iterative Lucy-Richardson algorithm were tried. An example of deconvolution applied to a track with the measured atmospheric PSF is shown in Fig.~\ref{fig:deconvolution}. At first glace the results look successful. However, it was found that the resulting tracks were quite sensitive to the amount of iteration used in the algorithm, and a large amount of "ringing" was introduced in the images. 
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=4.5in]{deconvolved.png}
+    \caption{The satellite trail after LR deconvolution.  Ringing can be seen at the end of the track and the results are quite dependent on the number of iterations and algorithm choices.}
+    \label{fig:deconvolution}
+\end{figure}
+
+\subsection{Monte Carlo PSF smearing}
+
+In order to determine the best approach to measuring the track start, a simple simulation test was undertaken. A perfect two-dimensional line was first smeared with a Gaussian PSF and then deconvolved with Lucy-Richardson deconvolution.  In Fig.~\ref{fig:three-lines} these three cases are shown.
+
+\begin{figure}[!htbp]
+\gridline{\fig{line}{4.5in}{(a)}}
+\gridline{\fig{smeared-line}{4.5in}{(b)}}
+\gridline{\fig{deconvolved-line}{4.5in}{(c)}}
+\caption{a) A perfect two-dimensional line, b) the same line after being smeared with the atmospheric PSF, and c) after undergoing deconvolution.}
+\label{fig:three-lines}
+\end{figure}
+
+Then, a horizontal line was cut through the center of the resulting tracks to understand where the true end of the track appeared in the resulting image.  Fig.~\ref{fig:smeared-profiles} shows the result of this test.  As can be seen, the deconvolved line has quite a bit of ringing at its end. The amount of ringing, and the intersection with the true track end is quite dependent on the amount of iteration chosen etc. On the other hand, it can be seen that in the case of simple smearing, the true end point is located at a point where the intensity is approximately 50\% of the main track intensity.
+
+\begin{figure}[!htbp]
+\gridline{\fig{smeared-profile}{0.45\textwidth}{(a)}
+          \fig{deconvolved-profile}{0.45\textwidth}{(b)}}
+          \caption{The intensity profiles of the resulting images a) The smeared profile and, b) after deconvolution. A red line is shown at the position of the true track end.}  
+          \label{fig:smeared-profiles}
+\end{figure}
+
+For this reason, the track start positions are identified by estimating the 50\% intensity relative to the average track intensity using a profile histogram as demonstrated in Fig.~\ref{fig:hand-scan} above.  At the time of hand scanning, in addition to a RA and DEC an estimated error size was also recorded.
+
+\subsection{Coordinate Transformations with Astropy}
+
+A final step before the timing comparison is to convert the spatial position of the satellites into sky coordinates.  The positions of the satellite as reported by the FAA are given as a x,y,z in geocentric coordinates.  Following the prescription in the \href{https://docs.astropy.org/en/stable/coordinates/common_errors.html\#altaz-calculations-for-earth-based-objects}{Common mistakes~} section of the Astropy~\citep{2022ApJ...935..167A} manual, one does this by carefully specifying the location of both the satellite and the ground location.  Then, the resulting Alt and Az coordinates are converted into ICRS RA and DEC and used to compare with what what observed.  The following code snippet taken from the analysis shows how this was done. 
+
+% cSpell:disable
+\begin{figure}[!htbp]
+    \centering
+    
+    \begin{python}
+
+    ground = EarthLocation.of_site('Rubin Observatory', refresh_cache=True)
+    satellite = EarthLocation.from_geocentric(found_x, found_y, found_z)
+
+    found_altaz = satellite.get_itrs(obstime=calc_time, location=ground).transform_to(AltAz(obstime=calc_time, location=ground))
+
+    altaz_coordinate = SkyCoord(alt = found_altaz.alt, az = found_altaz.az, obstime=calc_time, location=ground, frame='altaz')
+
+    
+    icrs = altaz_coordinate.transform_to('icrs')
+    
+    return found_time, icrs.ra.deg, icrs.dec.deg
+
+    \end{python}
+
+    \caption{The code used to convert from x,y,z to predicted RA and DEC of EUTELSAT 117W B}.
+\end{figure}
+% cSpell:enable
+
+\section{Timing Offset Determination}
+
+With track positions from the exposures, and a predicted position based on the FITS header time, it is now possible to compare the results and then apply a fit to determine what if any time-offset is necessary to make them agree. The first step is to merge the data from the hand scanning, the position predictions and the ComCam shutter log info into a single data frame.  A subset of the columns are shown in Tab.~\ref{tab:merged-table}.
+
+\begin{sidewaystable}
+\begin{tabular}{llrrrrrrl}
+\toprule
+ & obsid & waas\_RA & waas\_DEC & RA\_Start & DEC\_Start & Error\_Start & Shutter\_offset & Blade \\
+\midrule
+0 & CC\_O\_20241129\_000237\_R22\_S21 & 35.17 & 4.63 & 35.17 & 4.63 & 0.52 & 22.00 & B \\
+1 & CC\_O\_20241129\_000238\_R22\_S22 & 35.23 & 4.63 & 35.23 & 4.63 & 0.35 & 33.00 & A \\
+2 & CC\_O\_20241129\_000239\_R22\_S22 & 35.30 & 4.63 & 35.30 & 4.63 & 0.58 & 21.00 & B \\
+3 & CC\_O\_20241129\_000240\_R22\_S22 & 35.37 & 4.63 & 35.37 & 4.63 & 0.51 & 34.00 & A \\
+4 & CC\_O\_20241129\_000246\_R22\_S11 & 35.97 & 4.63 & 35.97 & 4.63 & 0.36 & 30.00 & A \\
+5 & CC\_O\_20241129\_000247\_R22\_S21 & 36.04 & 4.63 & 36.04 & 4.63 & 0.51 & 26.00 & B \\
+6 & CC\_O\_20241129\_000249\_R22\_S22 & 36.17 & 4.63 & 36.17 & 4.63 & 0.59 & 19.00 & B \\
+7 & CC\_O\_20241129\_000250\_R22\_S22 & 36.24 & 4.63 & 36.24 & 4.63 & 0.68 & 37.00 & A \\
+8 & CC\_O\_20241207\_000549\_R22\_S21 & 76.05 & 4.70 & 76.05 & 4.70 & 1.08 & 35.00 & A \\
+9 & CC\_O\_20241207\_000550\_R22\_S22 & 76.10 & 4.70 & 76.10 & 4.70 & 2.56 & 28.00 & B \\
+\bottomrule
+\end{tabular}
+\caption{Selected columns from the merged dataframe. The dataframe contains times (not shown for space) as well as the scanned and predicted RAs and DECs along with shutter information.}
+\label{tab:merged-table}
+\end{sidewaystable}
+
+With no corrections for the shutter delays or timing offsets we can immediately compare the expected and measured track starts for the 10 exposures.  Fig.~\ref{fig:ra-dec-offsets} shows the delta in RA and DEC between the scanned and predicted coordinate values. The typical error size estimated in the scanning is near 0.5", worse for cases with poor seeing. The error size is also reflected in the plot. A clear shift can be seen in right ascension, corresponding to timing offsets.  However, the declination is centered exactly around zero lending confidence to our procedure. 
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics{offsets.png}
+    \caption{Offsets in RA and DEC for the observed satellite positions relative to the values predicted from the downloaded spatial coordinates with no adjustments for timing.}
+    \label{fig:ra-dec-offsets}
+\end{figure}
+
+\subsection{Shutter Timing Delays}
+
+Before calculating any overall timing offsets for the observatory system, any delays relative to the start of CCD integration as recorded in the FITS header must also be accounted for. With no modifications to timing at all, the dispersion in right ascension is about 130~ms with a mean shift of about 50~ms. For each exposure, we must also apply the timing delays described in Sec.~\ref{sec:shutter-system} that are introduced by the shutter.  In particular, as it takes 396 milliseconds for the shutter to open or close completely, we must carefully take into account the position of the satellite track on the focal plane.
+
+Before accounting for the shutter motion profile, there is a delay of approximately 29~ms (with a 6~ms rms) delay before the shutter open signal is issued.  This time was extracted from the ComCam shutter computer for each exposure and was added to the integration time start time-stamp.  After adding this delay, an additional delay for each exposure is added corresponding to the time that it takes to shutter blade top reach the position of the satellite track.  Fig.~\ref{fig:raft-position} shows the location of of the start of each track on the ComCam raft.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics{raft-positions.png}
+    \caption{Position of the satellite streak start points.}
+    \label{fig:raft-position}
+\end{figure}
+
+There are two blades in the shutter (labeled "A" and "B").  Working in DM coordinates, blade A moves from high X to low X (so R-L) followed by blade B moving L-R.  Assuming that the motion is strictly linear with time, and takes 396~ms to fully open or close, a function which converts the RA and DEC in the focal plane to a timing delay is straight forward to create. The code to calculate this delay as a function of Blade and focal plane position is shown in Fig.~\ref{fig:blade-delay-code}.
+
+% cSpell:disable
+\begin{figure}[!htbp]
+    \centering
+    
+    \begin{python}
+
+    # Calculate the shutter time delta
+    E = aperture_side/2 
+    x = focal_plane_x[0] # mm
+    y = focal_plane_y[0] # mm
+    delta_S = 396 # milliseconds
+
+    if blade == 'A':
+        shutter_time = (E - x) * delta_S/(2*E)
+    elif blade == 'B':
+        shutter_time = (E + x) * delta_S/(2*E)
+
+    \end{python}
+
+    \caption{The code used to calculate shutter motion delays}.
+    \label{fig:blade-delay-code}
+\end{figure}
+% cSpell:enable
+
+The result of the blade delay calculation is illustrated in Fig.~\ref{fig:blade-movement}. The figure shows explicitly how the blades move. The left motion off blade A has smaller offset since the tracks are closer to the right fo the focal plane. The opposite is true of blade B which has to move past the center point to get to the tracks. This explains the double peak that is visible in Fig.~\ref{Fig:1d-ra-offsets}.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics{blade-movement.png}
+    \caption{Blade Motion for shutter blades A and B.  The locations of track start positions and calculated timing delays are shown. The motion of the blades is indicated on the figure.}
+    \label{fig:blade-movement}
+\end{figure}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics{offsets-1d}
+    \caption{One dimensional distribution of the offsets in RA and DEC for the observed satellite positions relative to the values predicted from the downloaded spatial coordinates.  The double peak is due to the different times it takes the blades to reach the tracks depending on if they are approaching from the left or right.}
+    \label{Fig:1d-ra-offsets}
+\end{figure}
+
+\subsection{Timing Offset Fit}
+
+After the application of the two timing shifts (delay to opening and shutter motion delay per exposure), a MINUIT~\citep{2025zndo..15157028D} fit is done which varies an overall timing delay. The data is fit to the model well with a results of:
+
+\begin{verbatim}
+    Timing offset = -161.98 +- 11.06 milliseconds
+    Chi2 = 0.5125
+\end{verbatim}
+
+This corresponds to a offset of $-12.15 \pm 0.83$ pixels.  The fit result is shown in Figure~\ref{fig:fit-result}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=4.5in]{fit}
+    \caption{The result of the MINUIT fit.}
+    \label{fig:fit-result}
+\end{figure}
+
+To further demonstrate the success of the fitting method. Fig.~\ref{fig:fit-output} shows the residuals of delta RA before and after the fit has applied the 160~ms offset, along with the tight peak after the shutter motions have been corrected.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=4.5in]{fit-output}
+    \caption{The residuals in right ascension after the shutter motions have been corrected before and after the fit results.  }
+    \label{fig:fit-output}
+\end{figure}
+
+Finally, Fig.~\ref{fig:residuals} shows the resulting residuals with lines marking one pixel boundary. After the fit, the location are typically determined to less than one pixel. The data is actually fitted so well (with a Chi2/dof of 0.1) that it is in fact likely that the errors on the hand scan positions were over estimated.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=4.5in]{residuals.png}
+    \caption{The residual difference in RA and DEC positions after the blade timing adjustments and timing fit.  Pixel sizes are indicated wit a red dotted line. }
+    \label{fig:residuals}
+\end{figure}
+
+\section{Conclusions and Interpretation of Results}
+
+The technique of using a WAAS satellite to calibrate the Rubin Observatory timing system has been shown to be effective.  If the measured tracks are corrected for delays caused by the shutter they can be directly compared with a prediction based on x,y,z locations as published by the FAA.
+
+However, the results of the fit are consistent with a -160~ms timing offset. This is inconsistent with our expectations of how well the NTP timing system at the observatory should be working.
+
+Unaccounted sources of error could include hardware or software errors in the camera/observatory hardware or software setup.  Possible errors in my analysis might include:
+
+\begin{itemize}
+    \item I am somehow systematically mis-estimating the track start position 
+    \item I have made some mistake in astropy converting from x,y,z to RA,DEC.
+    \item The time of the DATE-BEG header had a different meaning that we understand.
+\end{itemize}
+
+Some issues identified during the analysis for future work include:
+
+\begin{itemize}
+    \item Ensuring high quality WCS results even for single exposure {\it preliminary-image-data}.
+    \item Finding a robust and hopefully automatic way to determine track end points.
+\end{itemize}
+
+
+\section{Suggested Next Steps}
+\label{sec:next-steps}
+
+It is no longer possible to determine more about why the ComCam has this unexpected delay. Determining if there are any unknown timing delays while using the LSSTCam is now the highest priority.  Investigations by the camera team to try to understand our current PTP setup have also surfaced some issues which are not completely understood\footnote{Yousuke Utsumi, private communication}.  So, the next step should be to repeat this analysis with the LSSTCam.
+
+Relative to the test described here, the LSSTCam utilizes the PTP system which should be much more accurate.  We also can access the shutter profile for each exposure and should have a well defined shutter delay for each pixel on the focal plane.  By measuring the satellite track as it moves across the entire focal plane we can map the response of the full shutter profile.
+
+Motivated by the importance for orbit determination, the solar system collaboration\footnote{Mario Juri\'c, private communication} has also expressed a desire to perform this test on a semi-regular basis as a check of the observatory timing precision.
+
+\vspace{0.1in}
+\noindent
+{\bf Proposal for LSSTCam Geosynchronous timing test}
+\vspace{0.1in}
+
+The following LSSTCam test is proposed:
+
+\begin{itemize}
+    \item Predict the average location of EUTELSAT 117W B using the code as before.
+    \item Rotate the camera so as to orient the focal plane so that the shutter moves in the direction of motion of the satellite. This will give us the greatest resolution on shutter time.
+    \item Starting at the center of the focal plane, tracking the sky should take 7 minutes for a satellite to move the 1.7 degrees to the edge of the sensors.  So, take a set of 40, 10 second exposures. This will take something somewhat longer than 7 minutes, and will allow the satellite to sample the full shutter motion. The full test should take on the order of 10 minutes.  
+\end{itemize}
+
+\section{Acknowledgments}
+
+Acknowledgments: \\
+
+The author would like to especially thank Brian Stalder and Tony Johnson for advice related to the overall analysis and details of the camera shutter system. He would also like to thank Dave Monet for his code to decode the WAAS position data, and Yousuke Utsumi for information on the NTP and PTP timing systems.
+
+The author was supported in this work by the US Department of Energy program, DOE grant DE-SC0010007.
+
+%\end{acknowledgments}
+
+%\software{Astropy \citep{2013A&A...558A..33A, 2018AJ....156..123A, 2022ApJ...935..167A}}
+
+%\newpage
+%\bibliographystyle{aasjournal}
+%\bibliography{references, lsst}
+
+%\end{document}

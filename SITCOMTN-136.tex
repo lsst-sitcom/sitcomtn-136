@@ -2,19 +2,37 @@
 \input{meta}
 
 % Package imports go here.
+\usepackage{pythonhighlight}
+\usepackage{rotating}
+\usepackage{booktabs}
+
+\graphicspath{{./figures/}}
 
 % Local commands go here.
+
+% These are from aastex
+\def\gridline#1{\vskip6pt\hbox to\hsize{#1}\vskip6pt}
+
+\def\fig#1#2#3{\hfill\vbox{\parskip=0pt\hsize=#2
+\includegraphics[width=#2]{#1}\vskip2pt\vtop{\centering
+\footnotesize
+\hsize=#2
+#3\vskip1pt
+}}\hfill}
+
 
 %If you want glossaries
 %\input{aglossary.tex}
 %\makeglossaries
 
-\title{Calibration of the Rubin absolute timing}
+\title{Absolute Observatory Timing Calibration using Geo-Synchronous           
+Satellites}
 
 % This can write metadata into the PDF.
 % Update keywords and author information as necessary.
 \hypersetup{
-    pdftitle={Calibration of the Rubin absolute timing},
+    pdftitle={Absolute Observatory Timing Calibration using Geo-Synchronous           
+Satellites},
     pdfauthor={Chris Walter},
     pdfkeywords={}
 }
@@ -22,9 +40,7 @@
 % Optional subtitle
 % \setDocSubtitle{A subtitle}
 
-\author{%
-Chris Walter
-}
+\author{Chris Walter}
 
 \setDocRef{SITCOMTN-136}
 \setDocUpstreamLocation{\url{https://github.com/lsst-sitcom/sitcomtn-136}}
@@ -35,7 +51,21 @@ Chris Walter
 % \setDocCurator{The Curator of this Document}
 
 \setDocAbstract{%
-geosync satellite
+An absolute timing calibration for the Rubin Observatory which includes
+the clock system and the motion of the camera shutter is necessary to
+accurately report the positions of astronomical objects such as asteroids and
+the timestamps of transient astronomical phenomenon. The observatory employs
+two different clock systems, an NTP based system that should be good to
+approximately 1~ms, and a PTP-based system with potential sub-microsecond
+accuracy.  The Commissioning Camera used during the first period of Rubin
+Observatory commissioning relied on the NTP clock, while the LSST Camera
+relies on the PTP-based system.  In this tech-note, an analysis is described
+utilizing a GPS system geo-synchronous satellite with precisely known spatial
+positions to calibrate the Observatory's NTP based clock.  After corrections
+for the camera shutter motion is considered, a $-161.98 \pm 11.06$
+milliseconds timing offset is found.  A detailed description of the analysis
+is presented along with a proposal for a followup satellite-based timing test
+using the LSST Camera.
 }
 
 % Change history defined here.
@@ -43,9 +73,8 @@ geosync satellite
 % Fields: VERSION, DATE, DESCRIPTION, OWNER NAME.
 % See LPM-51 for version number policy.
 \setDocChangeRecord{%
-  \addtohist{1}{YYYY-MM-DD}{Unreleased.}{Chris Walter}
+  \addtohist{1}{2025-12-01}{First Release.}{Chris Walter}
 }
-
 
 \begin{document}
 
@@ -54,8 +83,7 @@ geosync satellite
 % Frequently for a technote we do not want a title page  uncomment this to remove the title page and changelog.
 % use \mkshorttitle to remove the extra pages
 
-% ADD CONTENT HERE
-% You can also use the \input command to include several content files.
+\input{timing-report}
 
 \appendix
 % Include all the relevant bib files.
@@ -69,9 +97,5 @@ geosync satellite
 \input{acronyms.tex}
 % If you want glossary uncomment below -- comment out the two lines above
 %\printglossaries
-
-
-
-
 
 \end{document}
