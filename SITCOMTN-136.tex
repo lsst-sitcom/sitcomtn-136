@@ -20,7 +20,6 @@
 #3\vskip1pt
 }}\hfill}
 
-
 %If you want glossaries
 %\input{aglossary.tex}
 %\makeglossaries
@@ -38,7 +37,7 @@ Satellites},
 }
 
 % Optional subtitle
-% \setDocSubtitle{A subtitle}
+\setDocSubtitle{Comissioning Camera Calibration Version}
 
 \author{Chris Walter}
 
@@ -50,7 +49,7 @@ Satellites},
 % Optional: name of the document's curator
 % \setDocCurator{The Curator of this Document}
 
-\setDocAbstract{%
+\setDocAbstract{
 An absolute timing calibration for the Rubin Observatory which includes
 the clock system and the motion of the camera shutter is necessary to
 accurately report the positions of astronomical objects such as asteroids and
@@ -65,8 +64,7 @@ positions to calibrate the Observatory's NTP based clock.  After corrections
 for the camera shutter motion is considered, a $-161.98 \pm 11.06$
 milliseconds timing offset is found.  A detailed description of the analysis
 is presented along with a proposal for a followup satellite-based timing test
-using the LSST Camera.
-}
+using the LSST Camera.}
 
 % Change history defined here.
 % Order: oldest first.
@@ -85,17 +83,11 @@ using the LSST Camera.
 
 \input{timing-report}
 
-\appendix
-% Include all the relevant bib files.
-% https://lsst-texmf.lsst.io/lsstdoc.html#bibliographies
-\section{References} \label{sec:bib}
-\renewcommand{\refname}{} % Suppress default Bibliography section
-\bibliography{local,lsst,lsst-dm,refs_ads,refs,books}
-
 % Make sure lsst-texmf/bin/generateAcronyms.py is in your path
-\section{Acronyms} \label{sec:acronyms}
+\section{Acronyms} 
+\label{sec:acronyms}
 \input{acronyms.tex}
 % If you want glossary uncomment below -- comment out the two lines above
-%\printglossaries
+% \printglossaries
 
 \end{document}
