@@ -23,11 +23,11 @@
 
 During the Rubin Observatory commissioning period, a dedicated test was undertaken to test the absolute calibration of the complete observatory timing system.  Doing an absolute timing calibration is difficult because, with no calibrated local atomic clock, the observatory system must rely on synchronization with remote timing standards, correcting for any delays or latency.  As the Earth rotates, the sky itself can in fact be used as an external clock.  However, controlling the pointing of the large Simonyi telescope is a complicated mechanical process, and which involves some uncertainty.  Additionally, as light moves through the Earth's atmosphere and then into the optics of the telescope it is distorted, resulting in measured positions which are shifted from that of the true image.  These differences in absolute sky pointing are overcome by fitting a pointing and distortion model against a highly accurate reference model~\citep{2010A&A...524A..42P} of the positions of stars in the sky.  Any small differences of absolute timing will be incorporated into this model, meaning that fixed objects in the sky cannot be used to test the accuracy of the system to millisecond time scales.  Adding to the complexity, the camera shutter moves across the focal plane during the exposure.  This movement takes hundreds of milliseconds resulting in one side of the focal plane being exposed to light earlier than the other.
 
-When an exposure is taken with the camera, the time of integration is recorded in the FITS~\citep{2010A&A...524A..42P} headers in the meta-data of the exposure.  This timestamp relies on the absolute timing of the system. However, as noted above, it does not map directly onto the time that the light from astronomical objects reaches the focal plane.  There are additional delays which must be considered.  Sometime after the integration start command is given, a command is given to open the shutter. Then, the shutter moves across the focal plane, exposing the CCDs as it moves.  In order to determine the absolute accuracy of the time associated with the position of each object measured on the focal plane, all of the above elements, from the integration time stamp, to the motion of the camera shutter must be understood.
+When an exposure is taken with the camera, the time of integration is recorded in the FITS~\citep{ctn-004, 2010A&A...524A..42P} headers in the meta-data of the exposure.  This timestamp relies on the absolute timing of the system. However, as noted above, it does not map directly onto the time that the light from astronomical objects reaches the focal plane.  There are additional delays which must be considered.  Sometime after the integration start command is given, a command is given to open the shutter. Then, the shutter moves across the focal plane, exposing the CCDs as it moves.  In order to determine the absolute accuracy of the time associated with the position of each object measured on the focal plane, all of the above elements, from the integration time stamp, to the motion of the camera shutter must be understood.
 
 In this analysis, we follow the procedure that was used in the ATLAS Survey~\citep{2018PASP..130f4505T}.  Namely, we utilize a geo-synchronous satellite whose location as function of time is extremely well known.  We target observations of the satellite and predict its location based on the integration start time stamp and shutter motion delays.  Then a timing fit, which varies a timing offset, is used to determine the accuracy the observatory timing standard at the camera.
 
-This test was performed using the Rubin Commissioning Camera (ComCam) utilizing a set of targeted exposures taken in November and December of 2024.
+This test was performed using the Rubin Commissioning Camera (LSSTComCam) utilizing a set of targeted exposures taken in November and December of 2024.
 
 \subsection{Rubin Timing System Requirements}
 
@@ -37,7 +37,7 @@ In OSS-REQ-0087 the timing precision on the supplied system time is specified wi
 
 \begin{itemize}
     \item This is not actually a requirement on absolute timing accuracy. Rather it is a requirement on {\it synchronization} with the observatory master clock. No requirement is specified on the master clock accuracy itself.
-    \item The requirement is a statement about the input clock accuracy for each system.  For a detailed understanding of what is required of a particular system (e.g. the ComCam) the OSS states: "The relationship between the timestamp and the actual physical event, expressed as latency/jitter, depends on both the computer and the hardware (mechanical, electrical, etc.). It is the responsibility of individual hardware design teams to determine the relevance of latency/jitter."
+    \item The requirement is a statement about the input clock accuracy for each system.  For a detailed understanding of what is required of a particular system (e.g. the LSSTComCam) the OSS states: "The relationship between the timestamp and the actual physical event, expressed as latency/jitter, depends on both the computer and the hardware (mechanical, electrical, etc.). It is the responsibility of individual hardware design teams to determine the relevance of latency/jitter."
 \end{itemize}
 
 Also specified in in OSS-REQ-0335 is the requirement on shutter timing errors. However, this requirement is not specified as a timing constrain.  Rather, it is expressed as a constraint on the resulting photometric magnitude error in milli-magnitude. This requirement cannot be directly tested by the timing calibration described here.
@@ -47,7 +47,7 @@ Also specified in in OSS-REQ-0335 is the requirement on shutter timing errors. H
 
 Given the ambiguity on the observatory requirements, we instead target the expected accuracy of the systems we are using, along with the requirements of (especially) the solar-system collaboration.   Our timing accuracy should firstly be no worse than the 10 millisecond observatory synchronization accuracy. Then, based on expected performance of the NTP and PTP systems we should be able to achieve close to 1~ms accuracy.  A one to ten millisecond accuracy would also meet the needs of the solar system collaboration for asteroid orbit determination\footnote{Mario Juri\'c, Private Communication}.
 
-The ComCam utilizes the NTP synchronization system to create its time stamps. Several independent computers housed inside of the ComCam are synched to the same clock signal which is distributed throughout the Observatory over the local fiber network. The LSST Camera (LSSTCam) utilizes the more accurate PTP system.  The analysis described here utilizes the ComCam but, in Sec.~\ref{sec:next-steps} a followup proposed test with the LSSTCam is presented.
+The LSSTComCam utilizes the NTP synchronization system to create its time stamps. Several independent computers housed inside of the LSSTComCam are synched to the same clock signal which is distributed throughout the Observatory over the local fiber network. The LSST Camera (LSSTCam) utilizes the more accurate PTP system.  The analysis described here utilizes the LSSTComCam but, in Sec.~\ref{sec:next-steps} a followup proposed test with the LSSTCam is presented.
 
 Information about the NTP system can be found on Wikipedia which also references with relevant information.  It summarizes the expected accuracy as "{\it NTP can usually maintain time to within tens of milliseconds over the public Internet, and can achieve better than one millisecond accuracy in local area networks under ideal conditions. Asymmetric routes and network congestion can cause errors of 100 ms or more.}"
 
@@ -122,31 +122,31 @@ In this framework, to measure to millisecond precision means measuring satellite
     \item Eutelsat size in meters 	   = 117.74
 \end{itemize}
 
-\subsection{The ComCam}
+\subsection{The LSSTComCam}
 
 The commissioning Camera~\citep{2022SPIE12184E..0JS, 2024rubn.inst....2S}  was used in the first months of the Rubin Commissioning campaign. Described more fully in the above references, the camera consists of a single raft made of nine ITL 4kx4k CCD sensors located at the center position of the camera focal plane. Designed to be a fully functional surrogate for the camera with the same mass profile and electronics, the system was used for end-to-end tests and the performance should be very similar to the LSSTCam.
 
-As noted in Sec.~\ref{sec:timing-system} above, the ComCam utilizes the NTP system.  If the observatory master clock is synchronized to its upstream tiers at the one to ten millisecond level, then the local synchronization should deliver similar performance.
+As noted in Sec.~\ref{sec:timing-system} above, the LSSTComCam utilizes the NTP system.  If the observatory master clock is synchronized to its upstream tiers at the one to ten millisecond level, then the local synchronization should deliver similar performance.
 
-\subsection{The ComCam Shutter System}
+\subsection{The LSSTComCam Shutter System}
 \label{sec:shutter-system}
 The shutter system is a 236mm Bonn-Shutter~\footnote{I have a PDF of the manual but currently no URL}. There are two blades with a programmable gap between them. The time of the start of CCD integration (in TAI units) is reflected in the FITS headers in the DATE-BEG header. Fig.~\ref{fig:shutter-timing} below, made by Tony Johnson, illustrates the timing of the following steps.
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=4.5in]{comcam-shutter-timing.png}
+    \includegraphics[width=4.5in]{ComCam-shutter-timing.png}
     \caption{Shutter timing diagram from Tony Johnson}
     \label{fig:shutter-timing}
 \end{figure}
 
-By examining the logs of the computer in the comcam that manages the shutter (comcam-hcu03 ), it is found that (for the exposures considered in this analysis) the shutter open signal is triggered about 29 milliseconds after the integration stamp on average (with a 6 milliseconds rms). Then there is a 396 millisecond period where the blade that is selected moves linearly out of the way of the focal plane, exposing the CCDs as it goes.  The shutter remains open for the exposure time, and then the second blade begins to cover the focal plane again, taking another 396 milliseconds until the shutter is fully closed.
+By examining the logs of the computer in the LSSTComCam that manages the shutter (comcam-hcu03 ), it is found that (for the exposures considered in this analysis) the shutter open signal is triggered about 29 milliseconds after the integration stamp on average (with a 6 milliseconds rms). Then there is a 396 millisecond period where the blade that is selected moves linearly out of the way of the focal plane, exposing the CCDs as it goes.  The shutter remains open for the exposure time, and then the second blade begins to cover the focal plane again, taking another 396 milliseconds until the shutter is fully closed.
 
 \section{Observing EUTELSAT 117W}
 \label{sec:observations}
 
-EUTELSAT 117W B was observed on two nights near the end of 2024, using  test BLOCK-299 on November 24th (see Rubin-TV sequences 236-255), and BLOCK-T332 on December 5th (Sequences 549 and 550). There were a set of 12 useful exposures recovered each with clearly distinguishable tracks that resulted from tracking the sky for 10~second.  As Rubin tracks the sky, and the satellites stay synchronous over the earth they show up as a streak in the image. All twelve of the exposures had a streak start point initiated inside one of the ComCam CCDs.
+EUTELSAT 117W B was observed on two nights near the end of 2024, using  test BLOCK-299 on November 24th (see Rubin-TV sequences 236-255), and BLOCK-T332 on December 5th (Sequences 549 and 550). There were a set of 12 useful exposures recovered each with clearly distinguishable tracks that resulted from tracking the sky for 10~second.  As Rubin tracks the sky, and the satellites stay synchronous over the earth they show up as a streak in the image. All twelve of the exposures had a streak start point initiated inside one of the LSSTComCam CCDs.
 
-The position of geosynchronous satellites does vary somewhat in the sky as they move in the orbits and they undertake active "station keeping" to maintain their desired position. So, in order to successfully observe the satellite in the single ComCam raft, a prediction of sky location at the time of observation is required.
+The position of geosynchronous satellites does vary somewhat in the sky as they move in the orbits and they undertake active "station keeping" to maintain their desired position. So, in order to successfully observe the satellite in the single LSSTComCam raft, a prediction of sky location at the time of observation is required.
 
 \subsection{Predicted satellite location via TLEs}
 
@@ -243,7 +243,7 @@ In order to compare with the predicted sky location and fit for any time delays,
 
 \subsection{WCS and cross-checks}
 
-Extracting a sky position for the EUTELSAT 117WB from DS9 relies on having an accurate WCS. Unlike when the WCS is solved for co-adds, the WCS calculated via nightly processing during the commissioning period was based on simple scaling and rotation of the DM Camera model of the ComCam. 
+Extracting a sky position for the EUTELSAT 117WB from DS9 relies on having an accurate WCS. Unlike when the WCS is solved for co-adds, the WCS calculated via nightly processing during the commissioning period was based on simple scaling and rotation of the DM Camera model of the LSSTComCam. 
 
 For this reason a series of checks were performed to make sure that the resulting WCSs were reasonable and would not themselves introduce large biases into the analysis.  Fig.~\ref{fig:ds9-wcs} shows an example of the GAIA DR2 sources overlaid with the exposure near a satellite track demonstrating that the current WCS is performing adequately. 
 
@@ -333,7 +333,7 @@ A final step before the timing comparison is to convert the spatial position of 
 
 \section{Timing Offset Determination}
 
-With track positions from the exposures, and a predicted position based on the FITS header time, it is now possible to compare the results and then apply a fit to determine what if any time-offset is necessary to make them agree. The first step is to merge the data from the hand scanning, the position predictions and the ComCam shutter log info into a single data frame.  A subset of the columns are shown in Tab.~\ref{tab:merged-table}.
+With track positions from the exposures, and a predicted position based on the FITS header time, it is now possible to compare the results and then apply a fit to determine what if any time-offset is necessary to make them agree. The first step is to merge the data from the hand scanning, the position predictions and the LSSTComCam shutter log info into a single data frame.  A subset of the columns are shown in Tab.~\ref{tab:merged-table}.
 
 \begin{sidewaystable}
 \begin{tabular}{llrrrrrrl}
@@ -379,7 +379,7 @@ With no corrections for the shutter delays or timing offsets we can immediately 
 
 Before calculating any overall timing offsets for the observatory system, any delays relative to the start of CCD integration as recorded in the FITS header must also be accounted for. With no modifications to timing at all, the dispersion in right ascension is about 130~ms with a mean shift of about 50~ms. For each exposure, we must also apply the timing delays described in Sec.~\ref{sec:shutter-system} that are introduced by the shutter.  In particular, as it takes 396 milliseconds for the shutter to open or close completely, we must carefully take into account the position of the satellite track on the focal plane.
 
-Before accounting for the shutter motion profile, there is a delay of approximately 29~ms (with a 6~ms rms) delay before the shutter open signal is issued.  This time was extracted from the ComCam shutter computer for each exposure and was added to the integration time start time-stamp.  After adding this delay, an additional delay for each exposure is added corresponding to the time that it takes to shutter blade top reach the position of the satellite track.  Fig.~\ref{fig:raft-position} shows the location of of the start of each track on the ComCam raft.
+Before accounting for the shutter motion profile, there is a delay of approximately 29~ms (with a 6~ms rms) delay before the shutter open signal is issued.  This time was extracted from the LSSTComCam shutter computer for each exposure and was added to the integration time start time-stamp.  After adding this delay, an additional delay for each exposure is added corresponding to the time that it takes to shutter blade top reach the position of the satellite track.  Fig.~\ref{fig:raft-position} shows the location of of the start of each track on the LSSTComCam raft.
 
 \begin{figure}[!htbp]
     \centering
@@ -491,7 +491,7 @@ Some issues identified during the analysis for future work include:
 \section{Suggested Next Steps}
 \label{sec:next-steps}
 
-It is no longer possible to determine more about why the ComCam has this unexpected delay. Determining if there are any unknown timing delays while using the LSSTCam is now the highest priority.  Investigations by the camera team to try to understand our current PTP setup have also surfaced some issues which are not completely understood\footnote{Yousuke Utsumi, private communication}.  So, the next step should be to repeat this analysis with the LSSTCam.
+It is no longer possible to determine more about why the LSSTComCam has this unexpected delay. Determining if there are any unknown timing delays while using the LSSTCam is now the highest priority.  Investigations by the camera team to try to understand our current PTP setup have also surfaced some issues which are not completely understood\footnote{Yousuke Utsumi, private communication}.  So, the next step should be to repeat this analysis with the LSSTCam.
 
 Relative to the test described here, the LSSTCam utilizes the PTP system which should be much more accurate.  We also can access the shutter profile for each exposure and should have a well defined shutter delay for each pixel on the focal plane.  By measuring the satellite track as it moves across the entire focal plane we can map the response of the full shutter profile.
 
@@ -529,23 +529,21 @@ The author was supported in this work by the US Department of Energy program, DO
 \section{Camera Coordinate Systems}
 \label{sec:coordinate-systems}
 
-There are two coordinate systems which must be considered when working with LSST camera data. They are introduced in~\citep{LSE-349}. The first is the DM convention which is the same as the Data Visualization Coordinate System (DVCS).  It is designed to be consistent with previous conventions in optical astronomy and to present the sensor-level data visually in the way astronomers are accustomed. As explained in~\citep{LSE-349}, the serial register is presented horizontally and is thought of as being clocked out from left to right.  Then each parallel transfer is thought of as a row being shifted down.  This convention was also used for visualization in previous instruments such as the DECam and the MegaCam.
+There are two coordinate systems which must be considered when working with LSST camera data. They are introduced in~\citep{LSE-349}. The first is the DM convention which is the same as the Data Visualization Coordinate System (DVCS).  It is designed to be consistent with previous conventions in optical astronomy and to present the sensor-level data visually in the way astronomers are accustomed.  In this system, the serial register movement is in the X direction and the parallel transfer direction is oriented along the Y axis.  
 
-The consequence of this is that the serial register movement is in the X direction and the parallel transfer direction is oriented along the Y axis.  Bleeding of charge after saturation moves along the parallel transfer direction which means conventionally, bleed trails appear vertically.
+The camera coordinate system (CCS) uses a different convention. The CCS convention is applied to all elements of the camera system (camera, focal plane, rafts, and sensors). In the CCS, the X-axis is aligned with the parallel transfer direction and the Y-axis is oriented along the serial register movement direction, with the Z-axis pointing out to the sky (if viewed looking into the camera). Full descriptions of the detector plane layout along with the orientation of the CCDs and the CCS coordinate system can be found in the camera tech-note~\citep{ctn-001}, and in the technical drawings~\citep{LCA-13381}.  \citet{LSE-349} describes how to apply the coordinate transformation between the two systems.
 
-The camera coordinate system (CCS) uses a different convention. The CCS convention is applied to all elements of the camera system (camera, focal plane, rafts, and sensors). In the CCS, the X-axis is aligned with the parallel transfer direction and the Y-axis is oriented along the serial register movement direction, with the Z-axis pointing out to the sky (if viewed looking into the camera). \citep{LSE-349} describes how to apply the coordinate transformation between these two system.
+Most relevant for this timing study is how the shutter moves physically relative to the focal plane. This is because, in order to correct the time offsets, it is necessary to understand in what direction each shutter blade sweeps across the focal plane and the pixels as a function of time.  The shutter is designed to move in the CCS \textpm\ X direction.
 
-Most relevant for this timing study is how the shutter moves physically relative to the focal plane. This is because, in order to correct the time offsets, it is necessary to understand in what direction each shutter blade sweeps across the focal plane and the pixels as a function of time.  The shutter is designed to move in the CCS +- X direction (or along the parallel transfer direction).
-
-In the design of the ComCam, the mounting of the raft assembly inside the ComCam chamber was rotated by 90 degrees relative to the LSSTCam convention\footnote{Travis Lang, private communication}. Fig.~\ref{fig:coordinate-systems} shows the sensor layout along with both the CCS and DVCS coordinate systems for both the ComCam and the LSSTCam.
+In the design of the LSSTComCam, the mounting of the raft assembly inside the LSSTComCam chamber was rotated by 90 degrees relative to the LSSTCam convention\footnote{Travis Lang, private communication}. Fig.~\ref{fig:coordinate-systems} shows the sensor layout along with both the CCS and DVCS coordinate systems for both the LSSTComCam and the LSSTCam.
 
 \begin{figure}[!htbp]
     \centering
     \includegraphics[width=4.5in]{LSSTCam-vs-ComCam-Coordinate-Systems}
-    \caption{A comparison of the ComCam and LSSTCam Coordinate systems. Both the CCS and DVCS systems are shown.  The ComCam is rotated 90 degrees relative to the LSSTCam. In both cameras, the shutter moves in the CCS +-X direction. Figure: Travis Lang}
+    \caption{A comparison of the LSSTComCam and LSSTCam Coordinate systems. Both the CCS and DVCS systems are shown.  The LSSTComCam is rotated 90 degrees relative to the LSSTCam. In both cameras, the shutter moves in the CCS \textpm X direction. Figure: Travis Lang}
     \label{fig:coordinate-systems}
 \end{figure}
 
-Since the shutter is designed to move in the CCS +-X direction this means it moves in the DVCS +-Y direction in the LSSTCam and in the DVCS +-X direction in the ComCam.  In this analysis, the shutter blade motion directions were independently determined and confirmed to agree with the above description by examining the resulting timing residual for each of the 4 possible shutter configurations.
+Since the shutter is designed to move in the CCS \textpm\ X direction, this means it moves in the DVCS \textpm\ Y direction in the LSSTCam and in the DVCS \textpm\ X direction in the LSSTComCam.  In this analysis, the shutter blade motion directions were independently determined and confirmed to agree with the above description by examining the resulting timing residual for each of the 4 possible shutter configurations.
 
 %\end{document}

@@ -5,3 +5,5 @@
 #
 # Example:
 #   MIA:Missing In Action
+ATLAS: "Asteroid Terrestrial-impact Last Alert System" All-sky Survey
+LSSTComCam: LSST Commissioning Camera
